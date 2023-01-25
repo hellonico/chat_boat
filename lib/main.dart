@@ -4,6 +4,25 @@ import 'package:flutter/material.dart';
 import 'gallery.dart';
 import 'package:http/http.dart' as http;
 
+
+Future<List<String>> parseJson(String url) async {
+  final uri = Uri.parse(url);
+  final host = url.substring(0,url.indexOf("/", 10));
+  final response = await http.get(uri);
+
+  if (response.statusCode == 200) {
+    // If the call to the server was successful, parse the JSON
+    final Map<String, dynamic> json_ = json.decode(response.body);
+    final List objects = json_.remove("objects");
+    return objects.map((e) =>
+      host + "/" + e.remove("image").remove("path").replaceAll("\\", "").toString()
+        ).toList();
+  } else {
+    // If that call was not successful, throw an error.
+    throw Exception('Failed to load data');
+  }
+}
+
 Future<List<String>> loadImagesFromCSV(String url) async {
   var response = await http.get(Uri.parse(url));
   if (response.statusCode == 200) {
@@ -16,7 +35,8 @@ Future<List<String>> loadImagesFromCSV(String url) async {
 }
 
 void main() {
-  loadImagesFromCSV('http://n1c0.hellonico.info/images.csv').then((images) {
+  //loadImagesFromCSV('http://n1c0.hellonico.info/images.csv').then((images) {
+  parseJson('http://n1c0.hellonico.info/deep-data.json').then((images) {
     runApp(MaterialApp(
       home: GalleryApp(images: images)
     ));
